@@ -4,6 +4,7 @@ import base64
 import os
 import json
 import requests
+import copy
 from PIL import Image
 from io import BytesIO
 from functools import lru_cache
@@ -121,6 +122,45 @@ def upload_image():
 
     return json.dumps({
         'success': True
+    })
+
+
+@app.route('/nearest_image_unseen', methods=['POST'])
+@cross_origin()
+def nearest_image_unseen():
+    data = request.json
+
+    if 'url' not in data:
+        return json.dumps({
+            'success': False,
+            'error': 'no url!! >:(',
+        })
+    elif 'seen' not in data:
+        return json.dumps({
+            'success': False,
+            'error': 'no seen images!!!! >:(',
+        })
+
+    global img_dataset
+
+    filtered_dataset = copy.deepcopy(img_dataset)
+
+    for seen_img in data['seen']:
+        try:
+            seen_img_idx = filtered_dataset['url'].index(seen_img)
+            del filtered_dataset['url'][seen_img_idx]
+            del filtered_dataset['vector'][seen_img_idx]
+        except ValueError:
+            print(seen_img, 'not found in dataset, skipping.')
+
+    filtered_knn = fit_knn(filtered_dataset)
+
+    response = requests.get(data['url'])
+    image_data = base64.b64encode(response.content)
+
+    return json.dumps({
+        'success': True,
+        'result': predict(image_data, neighbors=data['n_neighbors'] if 'n_neighbors' in data else 1, knn=filtered_knn)
     })
 
 

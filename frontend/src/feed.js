@@ -20,6 +20,11 @@ class Feed extends React.Component {
       previousIndex: 0,
     }
 
+    const seen_images = {
+      'https://post.medicalnewstoday.com/wp-content/uploads/sites/3/2020/02/322868_1100-800x825.jpg': true,
+      'https://i.ytimg.com/vi/MPV2METPeJU/maxresdefault.jpg': true,
+      'https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/golden-retriever-royalty-free-image-506756303-1560962726.jpg': true,
+    }
     // TODO: given this.props.user, get not-seen-images and store them in state.images
   }
 
