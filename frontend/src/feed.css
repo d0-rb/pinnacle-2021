@@ -1,0 +1,65 @@
+.overlay {
+  position: absolute !important;
+}
+
+.top-right {
+  top: 0px;
+  right: 0px;
+}
+
+.top-left {
+  top: 0px;
+  left: 0px;
+}
+
+.gradient-right {
+  background: rgb(0,0,0);
+  background: linear-gradient(90deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.25) 100%);
+}
+
+.gradient-left{
+  background: rgb(0,0,0);
+  background: linear-gradient(270deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.25) 100%);
+}
+
+.max-height {
+  height: calc(100% - 44px);
+}
+
+.button-width {
+  width: 20%;
+}
+
+.feed-image {
+  width : 100%;
+}
+
+.slide-in-right {
+	animation: slide-in-right 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translateX(1000px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-left {
+	animation: slide-in-left 0.5s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+}
+
+@keyframes slide-in-left {
+  0% {
+    transform: translateX(-1000px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
