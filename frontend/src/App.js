@@ -1,8 +1,10 @@
 import './App.css';
+import SignIn from './SignIn';
+import GoogleButton from 'react-google-button'
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, setPersistence, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
 import React from 'react';
+import Button from '@mui/material/Button';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -17,21 +19,76 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const provider = new GoogleAuthProvider();
 
 class App extends React.Component {
   constructor(props) {
     super(props);
 
     this.auth = getAuth();
-    signInWithPopup(this.auth, provider);
+    this.provider = new GoogleAuthProvider();
+    this.state = {
+      signedIn: false,
+    }
+
+    this.authSubscription = onAuthStateChanged((user) => {
+      if (user) {
+        this.setState({
+          signedIn: true,
+          user,
+        })
+      }
+    });
+  }
+  /**
+   * Don't forget to stop listening for authentication state changes
+   * when the component unmounts.
+   */
+  componentWillUnmount() {
+    this.authSubscription();
+  }
+
+  googleSignOut(event) {
+    signOut();
+  }
+
+  googleSignIn(event) {
+    setPersistence(this.auth, 'local')
+      .then(function() {
+        signInWithPopup(this.auth, this.provider)
+          .then((result) => {
+            // This gives you a Google Access Token. You can use it to access the Google API.
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+    
+            this.state.user = result.user;
+            this.state.token = credential.accessToken;
+          }).catch((error) => {
+            // Handle Errors here.
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            // The email of the user's account used.
+            const email = error.email;
+            // The AuthCredential type that was used.
+            const credential = GoogleAuthProvider.credentialFromError(error);
+            // ...
+          });
+      }).catch(function(error) {
+        // Handle Errors here.
+        var errorCode = error.code;
+        var errorMessage = error.message;
+    });
   }
 
   render() {
     return (
       <div className="App">
-        
+        <GoogleButton
+          onClick={this.googleSignIn}
+        />
+        <Button
+          onClick={this.googleSignOut}
+        >
+          Hi!!
+        </Button>
       </div>
     );
   }
