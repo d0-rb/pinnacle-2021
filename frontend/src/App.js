@@ -69,8 +69,10 @@ class App extends React.Component {
             // This gives you a Google Access Token. You can use it to access the Google API.
             const credential = GoogleAuthProvider.credentialFromResult(result);
     
-            this.state.user = result.user;
-            this.state.token = credential.accessToken;
+            this.setState({
+              user: result.user,
+              token: credential.accessToken
+            })
           }).catch((error) => {
             // Handle Errors here.
             const errorCode = error.code;
