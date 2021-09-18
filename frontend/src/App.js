@@ -1,5 +1,6 @@
 import './App.css';
 import SignIn from './SignIn';
+import MainPage from './main';
 import GoogleButton from 'react-google-button'
 import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
@@ -30,14 +31,23 @@ class App extends React.Component {
       signedIn: false,
     }
 
-    this.authSubscription = onAuthStateChanged((user) => {
-      if (user) {
-        this.setState({
-          signedIn: true,
-          user,
-        })
-      }
-    });
+    signInWithPopup(this.auth, this.provider)
+      .then((result) => {
+        // This gives you a Google Access Token. You can use it to access the Google API.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+
+        this.state.user = result.user;
+        this.state.token = credential.accessToken;
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        // ...
+      });
   }
   /**
    * Don't forget to stop listening for authentication state changes
@@ -81,14 +91,7 @@ class App extends React.Component {
   render() {
     return (
       <div className="App">
-        <GoogleButton
-          onClick={this.googleSignIn}
-        />
-        <Button
-          onClick={this.googleSignOut}
-        >
-          Hi!!
-        </Button>
+        <MainPage user={this.state.user} />
       </div>
     );
   }
