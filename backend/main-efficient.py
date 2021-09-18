@@ -116,16 +116,53 @@ class EngineAPI(FlaskView):
     def nearest_image(self):
         data = request.json
 
+        seen = data['seen'] if 'seen' in data else ()
+        limit = data['limit'] if 'limit' in data else 0
+
         if 'uuid' not in data:
+            if 'image' not in data:
+                return json.dumps({
+                    'success': False,
+                    'error': 'u rly have the nerve to ping this endpoint without including a uuid or image in the body'
+                })
+
+            img = self.preprocess(Image.open(BytesIO(base64.b64decode(data['image'])))).unsqueeze(0).to(self.device)
+            features = self.model.encode_image(img).squeeze().detach().tolist()
+            return self.predict_new(features, seen, limit)
+
+        return self.predict_existing(data['uuid'], seen, limit)
+
+    @route('/nearest_text', methods=['POST'])
+    @cross_origin()
+    def nearest_text(self):
+        data = request.json
+
+        if 'text' not in data:
             return json.dumps({
                 'success': False,
-                'error': 'NO uuid!!!!! >>:(',
+                'error': 'SEND TEXT!!! WHY DID YOU PING THE NEAREST_TEXT ENDPOINT WITHOUT SENDING TEXT IN THE BODY!!!!!'
             })
 
         seen = data['seen'] if 'seen' in data else ()
         limit = data['limit'] if 'limit' in data else 0
 
-        return self.predict_existing(data['uuid'], seen, limit)
+        text = clip.tokenize([data['text']]).cpu()
+        features = self.model.encode_text(text).squeeze().detach().tolist()
+        return self.predict_new(features, seen, limit)
+
+    def predict_new(self, embedding, seen=(), limit=0):
+        img_distances = {}
+        for img_uuid, img_data in self.img_dataset.items():
+            if img_uuid in seen:
+                continue
+
+            img_distances[img_uuid] = distance(embedding, img_data['vector'])
+
+        nearest_imgs = [img_uuid for img_uuid, _ in sorted(img_distances.items(), key=lambda item: item[1])]
+
+        limit = limit if limit > 0 else len(nearest_imgs)
+
+        return nearest_imgs[0:limit]
 
     def predict_existing(self, uuid, seen=(), limit=0):
         if uuid not in self.img_dataset:
@@ -135,12 +172,14 @@ class EngineAPI(FlaskView):
             })
 
         nearest_imgs = []
-        for img_uuid, img_distance in self.img_dataset[uuid]:
-            if img_uuid not in seen:
-                if limit == 0 or len(nearest_imgs) < limit:
-                    nearest_imgs.append(img_uuid)
-                else:
-                    break
+        for img_uuid, img_distance in self.img_dataset[uuid]['distances']:
+            if img_uuid in seen:
+                continue
+
+            if limit == 0 or len(nearest_imgs) < limit:
+                nearest_imgs.append(img_uuid)
+            else:
+                break
 
         return nearest_imgs
 
