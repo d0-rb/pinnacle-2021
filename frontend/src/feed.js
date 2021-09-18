@@ -14,8 +14,8 @@ class Feed extends React.Component {
     super(props);
 
     this.state = {
-      images: ['https://post.medicalnewstoday.com/wp-content/uploads/sites/3/2020/02/322868_1100-800x825.jpg', 'https://i.ytimg.com/vi/MPV2METPeJU/maxresdefault.jpg', 'https://hips.hearstapps.com/hmg-prod.s3.amazonaws.com/images/golden-retriever-royalty-free-image-506756303-1560962726.jpg'],
-      likes: [false, false, false],
+      images: [],
+      likes: [],
       lookIndex: 0,
       previousIndex: 0,
     }
