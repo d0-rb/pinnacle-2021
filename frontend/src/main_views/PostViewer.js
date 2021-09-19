@@ -62,7 +62,7 @@ export default function PostViewer() {
             let suggestedImgUuid = ''
             if (userDoc.data().posts.length > 0) {
                 for (let i = userDoc.data().posts.length-1; i >= 0; i--) {
-                    if ((i == 0) || (Math.floor(Math.random() * 2) == 0)) {  // if it wins the coinflip or is the last element
+                    if ((i === 0) || (Math.floor(Math.random() * 2) === 0)) {  // if it wins the coinflip or is the last element
                         suggestedImgUuid = userDoc.data().posts[i]
                         break;
                     }
@@ -84,7 +84,7 @@ export default function PostViewer() {
                     }
                 }).then((res) => res.json())
                 .then((json) => {
-                    if (json['result']['img_uuid'].length == 2) {
+                    if (json['result']['img_uuid'].length === 2) {
                         setImages(json['result']['img']);
                         setImageIds(json['result']['img_uuid']);
                         setImageTimes([0, 0]);
@@ -126,6 +126,7 @@ export default function PostViewer() {
         return () => {
             // Set the max index to the new index
             setMaxTimeIndex(newMaxIndex);
+            markValuableImage(imageIds[newMaxIndex])
             fetch("http://192.168.162.63:5000/nearest_image", {
                 method: "POST",
                 body: JSON.stringify({
