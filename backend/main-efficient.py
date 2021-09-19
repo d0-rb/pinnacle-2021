@@ -149,6 +149,10 @@ class EngineAPI(FlaskView):
 
         if 'img_uuid' in data:
             print(data['img_uuid'])
+            print(self.img_dataset.keys())
+            print(data['img_uuid'] in self.img_dataset)
+            print(data['img_uuid'] in self.img_dataset.keys())
+            print(self.img_dataset[data['img_uuid']])
             img_uuids = self.predict_existing(data['img_uuid'], seen, limit)
         else:
             if 'image' not in data:

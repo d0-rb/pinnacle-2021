@@ -67,8 +67,8 @@ export default function PostViewer() {
                         break;
                     }
                 }
-            } else if (userDoc.data().most_valuable_image) {
-                suggestedImgUuid = userDoc.data().most_valuable_image;
+            } else if (userDoc.data().most_valuable_img) {
+                suggestedImgUuid = userDoc.data().most_valuable_img;
             }
 
             if (suggestedImgUuid !== '') {
