@@ -24,7 +24,7 @@ let templateState = {
 // Reducer
 const storeReducer = (state = templateState, action) => {
     switch (action.type) {
-        case 'STORE_USER_ID':
+        case 'STORE_USER_UID':
             return storeUserUidHelper(state, action.uid) // Saves user id
         default: 
             return state;

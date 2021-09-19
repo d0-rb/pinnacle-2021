@@ -30,6 +30,7 @@ class App extends React.Component {
         // This gives you a Google Access Token. You can use it to access the Google API.
         this.setState({signedIn: true, attemptedSignIn: true});
         store.dispatch(storeUserUid(result.user.uid));
+        console.log(result.user.uid)
         
         const docRef = doc(db, "users", result.user.uid);
         getDoc(docRef).then((doc) => {

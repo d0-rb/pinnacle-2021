@@ -55,10 +55,10 @@ export default function PostViewer() {
     const[buttonActive, setButtonStatus] = useState(true);
     const[backButtonActive, setBackButtonStatus] = useState(false);
 
-    // useEffect(() => {
-        
-        // setImages();
-    // }, [])
+    useEffect(() => {
+        setImageIds([]);
+        setImages([]);
+    }, [])
 
     function changeRecommendation(newMaxIndex, replace = false) {
         return () => {
