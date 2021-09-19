@@ -63,14 +63,19 @@ class EngineAPI(FlaskView):
 
         self.db.collection('images').document(data['img_uuid']).delete()
 
-        del self.img_dataset[data['img_uuid']]
         for existing_img_uuid, existing_img_data in self.img_dataset.items():
             for pair_idx, (paired_img_uuid, paired_img_distance) in enumerate(existing_img_data['distances']):
                 if paired_img_uuid == data['img_uuid']:
-                    del existing_img_data[pair_idx]
+                    del existing_img_data['distances'][pair_idx]
                     break
 
+        del self.img_dataset[data['img_uuid']]
+
         self.save_data()
+
+        return json.dumps({
+            'success': True,
+        })
 
     @route('/upload_image', methods=['POST'])
     @cross_origin()
@@ -125,7 +130,8 @@ class EngineAPI(FlaskView):
             self.save_data()
 
         return json.dumps({
-            'success': True
+            'success': True,
+            'result': data['img_uuid'],
         })
 
     @route('/nearest_image', methods=['POST'])
@@ -190,13 +196,23 @@ class EngineAPI(FlaskView):
     @route('/mark_seen', methods=['POST'])
     @cross_origin()
     def mark_seen(self):
-        entry = request.json
-        uuid = entry['uuid']
-        img_uuid = entry['img_uuid']
-        user = self.db.collection('users').document(uuid)
+        data = request.json
+
+        if 'uuid' not in data:
+            return json.dumps({
+                'success': False,
+                'error': 'no uuid smh',
+            })
+        elif 'img_uuid' not in data:
+            return json.dumps({
+                'success': False,
+                'error': 'no img_uuid pls send it :(',
+            })
+
+        user = self.db.collection('users').document(data['uuid'])
         userDict = copy.deepcopy(user.get().to_dict())
-        userDict["images_seen"][img_uuid] = True
-        user.set({"images_seen": userDict}, merge=True)
+        userDict['images_seen'][data['img_uuid']] = True
+        user.set({'images_seen': userDict['images_seen']}, merge=True)
 
         return json.dumps({
             'success': True,
@@ -237,9 +253,12 @@ class EngineAPI(FlaskView):
         for doc in docs:
             image = doc.to_dict()
             image['img_uuid'] = doc.id
-            images.append(doc)
+            images.append(image)
 
-        return images
+        return json.dumps({
+            'success': True,
+            'result': images
+        })
 
 
     def predict_new(self, embedding, seen=(), limit=0):

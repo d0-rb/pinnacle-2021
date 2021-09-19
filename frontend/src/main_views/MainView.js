@@ -24,12 +24,12 @@ const SideColumn = styled.div`
     width: 100%;
 `
 
-export default function MainView() {
+export default function MainView(props) {
     return (
         <Wrapper>
-            <PostViewer></PostViewer>
+            <PostViewer />
             <SideColumn>
-                <MenuView></MenuView>
+                <MenuView />
                 <RecommendedUsersView></RecommendedUsersView>
             </SideColumn>
         </Wrapper>
