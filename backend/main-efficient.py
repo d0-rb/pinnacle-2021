@@ -81,8 +81,6 @@ class EngineAPI(FlaskView):
             img_features = self.model.encode_image(img).squeeze().tolist()
             img_distances_raw = []
 
-            print(self.img_dataset)
-
             for img_uuid, img_data in self.img_dataset.items():
                 cur_distance = distance(img_data['vector'], img_features)
                 img_distances_raw.append((img_uuid, cur_distance))
@@ -104,8 +102,6 @@ class EngineAPI(FlaskView):
             }
 
             self.save_data()
-
-            print(self.img_dataset)
 
         return json.dumps({
             'success': True
