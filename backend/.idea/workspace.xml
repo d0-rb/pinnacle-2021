@@ -4,9 +4,7 @@
     <list default="true" id="f7a353ce-fc07-499e-9314-0fa2aafc81db" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main-efficient.py" beforeDir="false" afterPath="$PROJECT_DIR$/main-efficient.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/App.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../frontend/src/main_views/PostViewer.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/main_views/PostViewer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/src/redux/redux.js" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/src/redux/redux.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
