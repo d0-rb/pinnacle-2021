@@ -50,6 +50,7 @@ class App extends React.Component {
         const errorMessage = error.message;
         
         console.error(errorCode, "Couldn't sign user in: ", errorMessage, error);
+
         this.setState({signedIn: false, attemptedSignIn: true});
       });
 
@@ -63,7 +64,7 @@ class App extends React.Component {
     else { // Successfully signed user in
       return (
         <div className="App">
-          <MainView></MainView>
+          <MainView />
         </div>
       )
     }
