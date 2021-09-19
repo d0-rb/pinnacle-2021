@@ -1,3 +1,4 @@
+import copy
 import json
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
@@ -40,8 +41,11 @@ def mark_seen():
     entry = request.get_json()
     uid = entry["uid"]
     iid = entry["iid"]
-    user = db.collection("users").document(uid).get().to_dict()
-    user["images_seen"][iid] = True
+    user = db.collection("users").document(uid)
+    userDict = copy.deepcopy(user.get().to_dict())
+    userDict["images_seen"][iid] = True
+    user.set({"images_seen": userDict}, merge=True)
+
     return "Success!"
 
 @app.route('/get_user_images', methods=['POST'])
