@@ -35,20 +35,23 @@ def distance(vec1, vec2):
     return np.linalg.norm(np2-np1)
 
 
+DATA_FILE = 'data.json'
+img_dataset = load_images(DATA_FILE)
+
+
 class EngineAPI(FlaskView):
-    DATA_FILE = 'data.json'
 
     def __init__(self):
         super().__init__()
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model, self.preprocess = clip.load("ViT-B/32", device=self.device)
-        self.img_dataset = load_images(self.DATA_FILE)
         self.db = firestore.client()
 
     def save_data(self):
-        with open(self.DATA_FILE, 'w') as data_file:
-            data_file.write(json.dumps(self.img_dataset))
+        global img_dataset
+        with open(DATA_FILE, 'w') as data_file:
+            data_file.write(json.dumps(img_dataset))
 
     @route('/delete_image', methods=['POST'])
     @cross_origin()
@@ -69,7 +72,9 @@ class EngineAPI(FlaskView):
                     del existing_img_data['distances'][pair_idx]
                     break
 
-        del self.img_dataset[data['img_uuid']]
+        global img_dataset
+
+        del img_dataset[data['img_uuid']]
 
         self.save_data()
 
@@ -80,6 +85,7 @@ class EngineAPI(FlaskView):
     @route('/upload_image', methods=['POST'])
     @cross_origin()
     def upload_image(self):
+        global img_dataset
         data = request.json
 
         if 'image' not in data:
@@ -102,12 +108,12 @@ class EngineAPI(FlaskView):
         user.set({'images_seen': userDict['images_seen'], 'posts': userDict['posts']}, merge=True)
 
         img = self.preprocess(Image.open(BytesIO(base64.b64decode(data['image'])))).unsqueeze(0).to(self.device)
-
+        print(img_dataset)
         with torch.no_grad():
             img_features = self.model.encode_image(img).squeeze().tolist()
             img_distances_raw = []
 
-            for img_uuid, img_data in self.img_dataset.items():
+            for img_uuid, img_data in img_dataset.items():
                 cur_distance = distance(img_data['vector'], img_features)
                 img_distances_raw.append((img_uuid, cur_distance))
 
@@ -122,13 +128,13 @@ class EngineAPI(FlaskView):
                     img_data['distances'].append((data['img_uuid'], cur_distance))
 
             img_distances_sorted = sorted(img_distances_raw, key=lambda item: item[1])
-            self.img_dataset[data['img_uuid']] = {
+            img_dataset[data['img_uuid']] = {
                 'vector': img_features,
                 'distances': img_distances_sorted
             }
 
             self.save_data()
-
+        print(img_dataset)
         return json.dumps({
             'success': True,
             'result': data['img_uuid'],
@@ -137,6 +143,7 @@ class EngineAPI(FlaskView):
     @route('/nearest_image', methods=['POST'])
     @cross_origin()
     def nearest_image(self):
+        global img_dataset
         data = request.json
 
         seen = 0
@@ -149,10 +156,11 @@ class EngineAPI(FlaskView):
 
         if 'img_uuid' in data:
             print(data['img_uuid'])
-            print(self.img_dataset.keys())
-            print(data['img_uuid'] in self.img_dataset)
-            print(data['img_uuid'] in self.img_dataset.keys())
-            print(self.img_dataset[data['img_uuid']])
+            print(img_dataset)
+            print(img_dataset.keys())
+            print(data['img_uuid'] in img_dataset)
+            print(data['img_uuid'] in img_dataset.keys())
+            print(img_dataset[data['img_uuid']])
             img_uuids = self.predict_existing(data['img_uuid'], seen, limit)
         else:
             if 'image' not in data:
@@ -167,9 +175,10 @@ class EngineAPI(FlaskView):
             img_uuids = self.predict_new(features, seen, limit)
 
         images = []
-        print(img_uuids)
         for img_uuid in img_uuids:
-            print(self.db.collection('images').document(img_uuid).get())
+            print(img_uuid)
+            print(self.db.collection('images').document(img_uuid).get().to_dict())
+
             images.append(self.db.collection('images').document(img_uuid).get().to_dict()['image'])
 
         return json.dumps({
@@ -269,8 +278,10 @@ class EngineAPI(FlaskView):
 
 
     def predict_new(self, embedding, seen=(), limit=0):
+        global img_dataset
+
         img_distances = {}
-        for img_uuid, img_data in self.img_dataset.items():
+        for img_uuid, img_data in img_dataset.items():
             if img_uuid in seen:
                 continue
 
@@ -283,14 +294,16 @@ class EngineAPI(FlaskView):
         return nearest_imgs[0:limit]
 
     def predict_existing(self, img_uuid, seen=(), limit=0):
-        if img_uuid not in self.img_dataset:
+        global img_dataset
+
+        if img_uuid not in img_dataset:
             return json.dumps({
                 'success': False,
                 'error': 'This image has not been uploaded to the api yet!'
             })
 
         nearest_imgs = []
-        for img_uuid, img_distance in self.img_dataset[img_uuid]['distances']:
+        for img_uuid, img_distance in img_dataset[img_uuid]['distances']:
             if img_uuid in seen:
                 continue
 
