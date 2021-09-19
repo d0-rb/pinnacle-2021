@@ -33,7 +33,6 @@ class App extends React.Component {
         // This gives you a Google Access Token. You can use it to access the Google API.
         this.setState({signedIn: true, attemptedSignIn: true});
         store.dispatch(storeUserUid(result.user.uid));
-        console.log(result.user.uid)
         
         const docRef = doc(db, "users", result.user.uid);
         getDoc(docRef).then((doc) => {
@@ -45,7 +44,7 @@ class App extends React.Component {
               uuid: result.user.uid,
               images_seen: {},
               posts: [],
-              most_valuable_image: null
+              most_valuable_img: null
             })
           } else if (Object.keys(doc.data().images_seen).length === 0 && doc.data().posts.length === 0) {
             console.log('is new user?')
@@ -54,13 +53,13 @@ class App extends React.Component {
             console.log(Object.keys(doc.data().images_seen).length === 0, doc.data().posts.length)
           }
         })
+
       }).catch((error) => {
         // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
         
         console.error(errorCode, "Couldn't sign user in: ", errorMessage, error);
-
         this.setState({signedIn: false, attemptedSignIn: true});
       });
   }

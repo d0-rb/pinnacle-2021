@@ -148,6 +148,11 @@ class EngineAPI(FlaskView):
             seen = user['images_seen'].keys()
 
         if 'img_uuid' in data:
+            print(data['img_uuid'])
+            print(self.img_dataset.keys())
+            print(data['img_uuid'] in self.img_dataset)
+            print(data['img_uuid'] in self.img_dataset.keys())
+            print(self.img_dataset[data['img_uuid']])
             img_uuids = self.predict_existing(data['img_uuid'], seen, limit)
         else:
             if 'image' not in data:
@@ -162,7 +167,9 @@ class EngineAPI(FlaskView):
             img_uuids = self.predict_new(features, seen, limit)
 
         images = []
+        print(img_uuids)
         for img_uuid in img_uuids:
+            print(self.db.collection('images').document(img_uuid).get())
             images.append(self.db.collection('images').document(img_uuid).get().to_dict()['image'])
 
         return json.dumps({

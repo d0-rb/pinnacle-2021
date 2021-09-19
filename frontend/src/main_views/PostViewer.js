@@ -50,33 +50,29 @@ const PostView = styled.img`
 `
 
 export default function PostViewer() {
-
     const pickImages = [];
 
-    let imagesInit = [];
-    let imageTimesInit = [];
-    let imageIdsInit = [];
-
-    let pickImage = true;
-    let forwardButton = false;
+    const [images, setImages] = useState([]);
+    const [imageTimes, setImageTimes] = useState([]);
+    const [imageIds, setImageIds] = useState([]);
 
     useEffect(() => {
         const docRef = doc(db, 'users', store.getState().auth.user);        
-        getDoc(docRef).then(async (userDoc) => {
+        getDoc(docRef).then((userDoc) => {
             let suggestedImgUuid = ''
             if (userDoc.data().posts.length > 0) {
-                for (let i = 0; i < userDoc.data().posts.length; i++) {
-                    if ((i == userDoc.data().posts.length - 1) || (Math.floor(Math.random() * 2) == 0)) {  // if it wins the coinflip or is the last element
+                for (let i = userDoc.data().posts.length-1; i >= 0; i--) {
+                    if ((i === 0) || (Math.floor(Math.random() * 2) === 0)) {  // if it wins the coinflip or is the last element
                         suggestedImgUuid = userDoc.data().posts[i]
                         break;
                     }
                 }
-            } else if (userDoc.data().most_valuable_image) {
-                suggestedImgUuid = userDoc.data().most_valuable_image;
+            } else if (userDoc.data().most_valuable_img) {
+                suggestedImgUuid = userDoc.data().most_valuable_img;
             }
 
             if (suggestedImgUuid !== '') {
-                await fetch("http://192.168.162.63:5000/nearest_image", {
+                fetch("http://192.168.162.63:5000/nearest_image", {
                     method: "POST",
                     body: JSON.stringify({
                         uuid: store.getState().auth.user,
@@ -87,34 +83,32 @@ export default function PostViewer() {
                         'Content-Type': 'application/json'
                     }
                 }).then((res) => res.json())
-                .then(async (json) => {
-                    if (json['result']['img_uuid'].length == 2) {
-                        imagesInit = json['result']['img'];
-                        imageIdsInit = json['result']['img_uuid'];
-                        imageTimesInit = [0, 0];
+                .then((json) => {
+                    if (json['result']['img_uuid'].length === 2) {
+                        setImages(json['result']['img']);
+                        setImageIds(json['result']['img_uuid']);
+                        setImageTimes([0, 0]);
 
-                        pickImage = false;
-                        forwardButton = true;
+                        markSeen(json['result']['img'][0]);
+                        setImagePickMenuStatus(false);
+                        setButtonStatus(true);
                     } else {
-                        const querySnapshot = await getDocs(collection(db, 'images'));
-                        querySnapshot.forEach((image) => {
-                            if (pickImages.length < 9) {
-                                pickImages.append({
-                                    img: image.data().image,
-                                    uuid: image.data().uuid,
-                                    img_uuid: image.id,
-                                });
-                            }
+                        getDocs(collection(db, 'images')).then((querySnapshot) => {
+                            querySnapshot.forEach((image) => {
+                                if (pickImages.length < 9) {
+                                    pickImages.push({
+                                        img: image.data().image,
+                                        uuid: image.data().uuid,
+                                        img_uuid: image.id,
+                                    });
+                                }
+                            });
                         });
                     }
                 });
             }
         });
     }, [])
-
-    const [images, setImages] = useState(imagesInit);
-    const [imageTimes, setImageTimes] = useState(imageTimesInit);
-    const [imageIds, setImageIds] = useState(imageIdsInit);
 
     const [lastIndex, setLastIndex] = useState(0); 
     const [timeElapsed, setTimeElapsed] = useState(Date.now());
@@ -123,15 +117,16 @@ export default function PostViewer() {
     
     const [timeoutClearCallback, setTimeoutClearCallback] = useState(null);
     
-    const[buttonActive, setButtonStatus] = useState(forwardButton);
+    const[buttonActive, setButtonStatus] = useState(false);
     const[backButtonActive, setBackButtonStatus] = useState(false);
-    const[imagePickMenuStatus, setImagePickMenuStatus] = useState(pickImage);
+    const[imagePickMenuStatus, setImagePickMenuStatus] = useState(true);
 
 
     function changeRecommendation(newMaxIndex, replace = false) {
         return () => {
             // Set the max index to the new index
             setMaxTimeIndex(newMaxIndex);
+            markValuableImage(imageIds[newMaxIndex])
             fetch("http://192.168.162.63:5000/nearest_image", {
                 method: "POST",
                 body: JSON.stringify({
@@ -147,15 +142,24 @@ export default function PostViewer() {
                 if (json['result']['img'].length < 1) {
                     return false;
                 } else {
-                    setImages((images) => {
-                        if (replace) {
-                            setImageIds([...imageIds.slice(0, -1), json['result']['img_uuid'][0]])
+                    if (replace) {
+                        setImages((images) => {
                             return [...images.slice(0, -1), json['result']['img'][0]];
-                        } else {
-                            setImageIds([...imageIds, json['result']['img_uuid'][0]]);
+                        });
+                        setImageIds((currentImageIds) => {
+                            return [...currentImageIds.slice(0, -1), json['result']['img_uuid'][0]]
+                        });
+                    } else {
+                        setImages((images) => {
                             return [...images, json['result']['img'][0]];
-                        }
-                    })
+                        });
+                        setImageTimes((times) => {
+                            return [...times, 0];
+                        })
+                        setImageIds((currentImageIds) => {
+                            return [...imageIds, json['result']['img_uuid'][0]];
+                        });
+                    }
 
                     return true;
                 }
@@ -196,6 +200,8 @@ export default function PostViewer() {
     function onClick(direction = "right") {
         const TIME_WEIGHT = 1000;
         let currentIndex = lastIndex;
+        let updatedMaxTimeValue = maxTimeValue;
+        let updatedMaxTimeIndex = maxTimeIndex;
         const lastIndexTimeElapsed = Date.now() - timeElapsed;
         setTimeElapsed(Date.now());
 
@@ -219,23 +225,28 @@ export default function PostViewer() {
         
         clearTimeout(timeoutClearCallback);
 
-        if (maxTimeIndex !== currentIndex) {
-            setTimeoutClearCallback(setTimeout(changeRecommendation(currentIndex, true), maxTimeValue - imageTimes[currentIndex]));
+        if (newImageTimes[lastIndex] > maxTimeValue) {
+            updatedMaxTimeValue = newImageTimes[lastIndex];
+            updatedMaxTimeIndex = lastIndex;
         }
 
-        if (currentIndex >= images.length - 1) { // if we reach the last img in the array and we need to get a new onw
+        if (updatedMaxTimeIndex !== currentIndex) {
+            setTimeoutClearCallback(setTimeout(changeRecommendation(currentIndex, true), updatedMaxTimeValue - imageTimes[currentIndex]));
+        }
+
+        if (currentIndex >= images.length - 1) { // if we reach the last img in the array and we need to get a new one
             let i = 0
             newImageTimes.forEach((time) => {
                 newImageTimes[i] = time - TIME_WEIGHT;
                 i++;
             })
 
-            setMaxTimeValue(maxTimeValue - TIME_WEIGHT);
+            setMaxTimeValue(updatedMaxTimeValue - TIME_WEIGHT);
 
-            if (maxTimeValue < TIME_WEIGHT) {
-                changeRecommendation(images.length-1);
+            if (updatedMaxTimeValue < TIME_WEIGHT) {
+                changeRecommendation(images.length-1)();
             } else {
-                changeRecommendation(maxTimeIndex);
+                changeRecommendation(updatedMaxTimeIndex)();
             }
 
             setImageTimes(newImageTimes);
