@@ -1,6 +1,10 @@
 /.idea
 
+/pinnacle-65730-firebase-adminsdk-ikwmu-ae1f6474f4.json
+
 /*.jpg
 /*.png
 
 data.json
+test.py
+image
