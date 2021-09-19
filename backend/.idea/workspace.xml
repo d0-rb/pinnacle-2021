@@ -36,7 +36,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.visualizer">
+  <component name="RunManager" selected="Python.main-efficient">
     <configuration name="main-efficient" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="backend" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -102,8 +102,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.visualizer" />
         <item itemvalue="Python.main-efficient" />
+        <item itemvalue="Python.visualizer" />
       </list>
     </recent_temporary>
   </component>
