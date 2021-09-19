@@ -49,7 +49,9 @@ const PostView = styled.img`
     object-fit: contain;
 `
 
-export default function PostViewer() {
+export default function PostViewer(props) {
+    const { chosenImage } = props
+
     const pickImages = [];
 
     const [images, setImages] = useState([]);
@@ -70,6 +72,8 @@ export default function PostViewer() {
             } else if (userDoc.data().most_valuable_img) {
                 suggestedImgUuid = userDoc.data().most_valuable_img;
             }
+
+            if (chosenImage !== undefined && chosenImage !== "") suggestedImgUuid = chosenImage;
 
             if (suggestedImgUuid !== '') {
                 fetch("http://192.168.162.63:5000/nearest_image", {
@@ -92,18 +96,6 @@ export default function PostViewer() {
                         markSeen(json['result']['img'][0]);
                         setImagePickMenuStatus(false);
                         setButtonStatus(true);
-                    } else {
-                        getDocs(collection(db, 'images')).then((querySnapshot) => {
-                            querySnapshot.forEach((image) => {
-                                if (pickImages.length < 9) {
-                                    pickImages.push({
-                                        img: image.data().image,
-                                        uuid: image.data().uuid,
-                                        img_uuid: image.id,
-                                    });
-                                }
-                            });
-                        });
                     }
                 });
             }
@@ -261,18 +253,13 @@ export default function PostViewer() {
         setImageTimes(newImageTimes);
     }
 
-    if (imagePickMenuStatus) {
-        return (
-            <BackgroundWrapper>
-            </BackgroundWrapper>
-        )
-    } else {
-        return (
-            <BackgroundWrapper>
-                <ArrowWrapper onClick={() => onClick("right")} active={buttonActive} right ></ArrowWrapper>
-                <ArrowWrapper onClick={() => onClick("left")} active={backButtonActive} left ></ArrowWrapper>
-                <PostView src={`data:image/png;base64, ${images[lastIndex]}`}></PostView>
-            </BackgroundWrapper>
-        )
-    }
+
+    return (
+        <BackgroundWrapper>
+            <ArrowWrapper onClick={() => onClick("right")} active={buttonActive} right ></ArrowWrapper>
+            <ArrowWrapper onClick={() => onClick("left")} active={backButtonActive} left ></ArrowWrapper>
+            <PostView src={`data:image/png;base64, ${images[lastIndex]}`}></PostView>
+        </BackgroundWrapper>
+    )
+    
 }
