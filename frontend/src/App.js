@@ -1,101 +1,73 @@
 import './App.css';
-import SignIn from './SignIn';
-import MainPage from './main';
-import GoogleButton from 'react-google-button'
-import { initializeApp } from "firebase/app";
-import { getAuth, setPersistence, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from "firebase/auth";
+import MainView from './main_views/MainView';
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth, db } from './firebase/firebaseConfig'
+import { doc, setDoc, getDoc } from "firebase/firestore"; 
+import { storeUserUid, store } from './redux/redux';
 import React from 'react';
-import Button from '@mui/material/Button';
+import NotSignedIn from './auth_views/NotSignedIn';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBfo7AffazD2FcvMGoRPVARtyPj94xuxTo",
-  authDomain: "pinnacle-65730.firebaseapp.com",
-  projectId: "pinnacle-65730",
-  storageBucket: "pinnacle-65730.appspot.com",
-  messagingSenderId: "471985174144",
-  appId: "1:471985174144:web:dbfd68e341d83b1b6c9865",
-  measurementId: "G-ZM80Y1JPVG"
-};
 
-const app = initializeApp(firebaseConfig);
 
 class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.auth = getAuth();
-    this.provider = new GoogleAuthProvider();
     this.state = {
+      attemptedSignIn: false,
       signedIn: false,
     }
+  }
 
-    signInWithPopup(this.auth, this.provider)
+
+  componentDidMount() {
+    const provider = new GoogleAuthProvider();
+
+    signInWithPopup(auth, provider)
       .then((result) => {
         // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
+        this.setState({signedIn: true, attemptedSignIn: true});
+        store.dispatch(storeUserUid(result.user.uid));
+        
+        const docRef = doc(db, "users", result.user.uid);
+        getDoc(docRef).then((doc) => {
+          
+          if (!doc.exists()) {
+            setDoc(docRef, {
+              uuid: result.user.uid,
+              images_seen: {},
+              posts: [],
+              most_valuable_image: null
+            })
+          }
+        })
 
-        this.state.user = result.user;
-        this.state.token = credential.accessToken;
       }).catch((error) => {
         // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        // ...
+        
+        console.error(errorCode, "Couldn't sign user in: ", errorMessage);
+        this.setState({signedIn: false, attemptedSignIn: true});
       });
-  }
-  /**
-   * Don't forget to stop listening for authentication state changes
-   * when the component unmounts.
-   */
-  componentWillUnmount() {
-    this.authSubscription();
-  }
 
-  googleSignOut(event) {
-    signOut();
-  }
-
-  googleSignIn(event) {
-    setPersistence(this.auth, 'local')
-      .then(function() {
-        signInWithPopup(this.auth, this.provider)
-          .then((result) => {
-            // This gives you a Google Access Token. You can use it to access the Google API.
-            const credential = GoogleAuthProvider.credentialFromResult(result);
-    
-            this.setState({
-              user: result.user,
-              token: credential.accessToken
-            })
-          }).catch((error) => {
-            // Handle Errors here.
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            // The email of the user's account used.
-            const email = error.email;
-            // The AuthCredential type that was used.
-            const credential = GoogleAuthProvider.credentialFromError(error);
-            // ...
-          });
-      }).catch(function(error) {
-        // Handle Errors here.
-        var errorCode = error.code;
-        var errorMessage = error.message;
-    });
   }
 
   render() {
-    return (
-      <div className="App">
-        <MainPage user={this.state.user} />
-      </div>
-    );
+    const { attemptedSignIn, signedIn } = this.state;
+
+    if (!attemptedSignIn) return <div className="App"><NotSignedIn message="Please sign in with the Google popup."/></div>; // User hasn't attempted to sign in
+    else if (!signedIn) return <div className="App"><NotSignedIn message="Couldn't sign you in. Check the console for more info."/></div>; // User couldn't sign in
+    else { // Successfully signed user in
+      return (
+        <div className="App">
+          <MainView></MainView>
+        </div>
+      )
+    }
+    
   }
 }
 
