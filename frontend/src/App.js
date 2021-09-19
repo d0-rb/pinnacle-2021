@@ -69,7 +69,7 @@ class App extends React.Component {
   }
 
   selectInitImage(image) {
-    this.setState({chosenImage: image, isNewUser: false}, () => {
+    this.setState({chosenImage: image}, () => {
       console.log(this.state.chosenImage)
     })
   }
@@ -84,6 +84,7 @@ class App extends React.Component {
         return (
           <div className="App">
             <ImagePicker open={this.state.modalOpen} closeModalCallback={() => this.closeModal()} chooseImage={(image) => this.selectInitImage(image)} />
+            <MainView chosenImage={this.state.chosenImage}/>
           </div>
         )
       }

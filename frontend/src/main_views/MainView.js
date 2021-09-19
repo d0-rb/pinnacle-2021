@@ -34,7 +34,7 @@ export default function MainView(props) {
 
     return (
         <Wrapper>
-            <PostViewer />
+            <PostViewer chosenImage={props.chosenImage}/>
             <SideColumn>
                 <MenuView />
                 <RecommendedUsersView></RecommendedUsersView>
