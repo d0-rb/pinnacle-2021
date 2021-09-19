@@ -89,6 +89,16 @@ export default function PostViewer() {
         }
     }
 
+    function markSeen(imageId) {
+        return fetch("192.168.162.63/mark_seen", {
+            method: "POST",
+            body: JSON.stringify({
+                uuid: store.getState().auth.user,
+                img_uuid: imageId,
+            })
+        })
+    }
+
     function onClick(direction = "right") {
         const TIME_WEIGHT = 1000;
         let currentIndex = lastIndex;
@@ -118,7 +128,7 @@ export default function PostViewer() {
             setTimeoutClearCallback(setTimeout(changeRecommendation(currentIndex, true), maxTimeValue - imageTimes[currentIndex]));
         }
 
-        if (currentIndex >= images.length - 1) {
+        if (currentIndex >= images.length - 1) { // if we reach the last img in the array and we need to get a new onw
             let i = 0
             newImageTimes.forEach((time) => {
                 newImageTimes[i] = time - TIME_WEIGHT;
@@ -139,7 +149,7 @@ export default function PostViewer() {
             setButtonStatus(false);
 
             // tell database we've seen the image.
-
+            markSeen(imageIds[currentIndex]);
         }
 
         setImageTimes(newImageTimes);

@@ -90,7 +90,7 @@ class EngineAPI(FlaskView):
         user = self.db.collection('users').document(data['uuid']).get().to_dict()
         data['img_uuid'] = firebase_img[1].id
         user['images_seen'][data['img_uuid']] = True
-        user['posts'][data['img_uuid']] = True
+        user['posts'].append(data['img_uuid'])
 
         img = self.preprocess(Image.open(BytesIO(base64.b64decode(data['image'])))).unsqueeze(0).to(self.device)
 
@@ -202,7 +202,7 @@ class EngineAPI(FlaskView):
     def mark_valuable_image(self):
         data = request.json
         user = self.db.collection('users').document(data['uuid']).get().to_dict()
-        user['most_valuable_img'] = user['img_uuid']
+        user['most_valuable_img'] = data['img_uuid']
 
         return json.dumps({
             'success': True,
