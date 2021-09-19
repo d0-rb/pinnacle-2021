@@ -1,3 +1,5 @@
+import copy
+
 import torch
 import clip
 import base64
@@ -87,10 +89,13 @@ class EngineAPI(FlaskView):
             })
 
         firebase_img = self.db.collection('images').add(data)
-        user = self.db.collection('users').document(data['uuid']).get().to_dict()
+        user = self.db.collection('users').document(data['uuid'])
+        userDict = copy.deepcopy(user.get().to_dict())
         data['img_uuid'] = firebase_img[1].id
-        user['images_seen'][data['img_uuid']] = True
-        user['posts'][data['img_uuid']] = True
+        userDict['images_seen'][data['img_uuid']] = True
+        userDict['posts'][data['img_uuid']] = True
+        user.set({'images_seen': userDict['images_seen'], 'posts': userDict['posts']}, merge=True)
+
 
         img = self.preprocess(Image.open(BytesIO(base64.b64decode(data['image'])))).unsqueeze(0).to(self.device)
 
@@ -189,8 +194,10 @@ class EngineAPI(FlaskView):
         entry = request.json
         uuid = entry['uuid']
         img_uuid = entry['img_uuid']
-        user = self.db.collection('users').document(uuid).get().to_dict()
-        user['images_seen'][img_uuid] = True
+        user = self.db.collection('users').document(uuid)
+        userDict = copy.deepcopy(user.get().to_dict())
+        userDict["images_seen"][img_uuid] = True
+        user.set({"images_seen": userDict}, merge=True)
 
         return json.dumps({
             'success': True,
@@ -201,8 +208,8 @@ class EngineAPI(FlaskView):
     @cross_origin()
     def mark_valuable_image(self):
         data = request.json
-        user = self.db.collection('users').document(data['uuid']).get().to_dict()
-        user['most_valuable_img'] = user['img_uuid']
+        user = self.db.collection('users').document(data['uuid'])
+        user.set({'most_valuable_img': data['img_uuid']}, merge=True)
 
         return json.dumps({
             'success': True,
