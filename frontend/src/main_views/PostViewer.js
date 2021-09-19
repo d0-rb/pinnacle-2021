@@ -7,6 +7,7 @@ import { collection, doc, getDocs, getDoc } from "firebase/firestore";
 const BackgroundWrapper = styled.div`
     height: 100%;
     min-width: 70%;
+    width: 70%;
     background-color: white;
     margin-right: 10px;
     position: relative;
@@ -14,6 +15,11 @@ const BackgroundWrapper = styled.div`
     align-items: center;
     border: 1px solid #dbdbdb;
     border-radius: 3px;
+
+
+    @media screen and (max-width: 1250px) {
+        min-width: 80%;
+    }
 `
 
 const ArrowWrapper= styled.div`
@@ -38,11 +44,13 @@ const ArrowWrapper= styled.div`
 
 const PostView = styled.img`
     width: 100%;
+    min-width: 300px;
     max-height: 95%;
     object-fit: contain;
 `
 
 export default function PostViewer() {
+
     const pickImages = [];
 
     let imagesInit = [];
@@ -124,7 +132,6 @@ export default function PostViewer() {
         return () => {
             // Set the max index to the new index
             setMaxTimeIndex(newMaxIndex);
-   
             fetch("http://192.168.162.63:5000/nearest_image", {
                 method: "POST",
                 body: JSON.stringify({
