@@ -15,6 +15,11 @@ const Wrapper = styled.div`
     flex-direction: row;
     justify-content: center;
     align-items: center;
+
+    @media screen and (max-width: 1250px) {
+        padding-left: 150px;
+        padding-right: 150px;
+    }
 `
 
 const SideColumn = styled.div`
@@ -24,12 +29,12 @@ const SideColumn = styled.div`
     width: 100%;
 `
 
-export default function MainView() {
+export default function MainView(props) {
     return (
         <Wrapper>
-            <PostViewer></PostViewer>
+            <PostViewer />
             <SideColumn>
-                <MenuView></MenuView>
+                <MenuView />
                 <RecommendedUsersView></RecommendedUsersView>
             </SideColumn>
         </Wrapper>
