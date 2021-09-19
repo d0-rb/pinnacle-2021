@@ -2,12 +2,11 @@ import React from 'react';
 import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ButtonBase from '@mui/material/ButtonBase';
 import './feed.css'
-import './main.css'
+import '../main.css'
 
 class Feed extends React.Component {
   constructor(props) {

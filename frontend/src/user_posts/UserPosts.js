@@ -79,6 +79,10 @@ function UserPost(props) {
 export default function UserPosts() {
     const [userPosts, setUserPosts] = useState([{}, {}, {}, {}, {}, {}]);
 
+    useEffect(() => {
+
+    }, [])
+
     return (
         <Wrapper>
             <HeaderContainer><Typography variant="h3" component="div">Your Posts</Typography></HeaderContainer>
