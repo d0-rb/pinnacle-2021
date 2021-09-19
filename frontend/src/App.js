@@ -1,6 +1,7 @@
 import './App.css';
 import MainView from './main_views/MainView';
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import ImagePicker from './main_views/ImagePicker'
 import { auth, db } from './firebase/firebaseConfig'
 import { doc, setDoc, getDoc } from "firebase/firestore"; 
 import { storeUserUid, store } from './redux/redux';
@@ -10,7 +11,6 @@ import NotSignedIn from './auth_views/NotSignedIn';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 
-
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -18,6 +18,9 @@ class App extends React.Component {
     this.state = {
       attemptedSignIn: false,
       signedIn: false,
+      chosenImage: null,
+      modalOpen: true,
+      isNewUser: false
     }
   }
 
@@ -36,12 +39,19 @@ class App extends React.Component {
         getDoc(docRef).then((doc) => {
           
           if (!doc.exists()) {
+            this.setState({isNewUser: true})
+
             setDoc(docRef, {
               uuid: result.user.uid,
               images_seen: {},
               posts: [],
               most_valuable_image: null
             })
+          } else if (Object.keys(doc.data().images_seen).length === 0 && doc.data().posts.length === 0) {
+            console.log('is new user?')
+            this.setState({isNewUser: true})
+          } else {
+            console.log(Object.keys(doc.data().images_seen).length === 0, doc.data().posts.length)
           }
         })
       }).catch((error) => {
@@ -53,7 +63,16 @@ class App extends React.Component {
 
         this.setState({signedIn: false, attemptedSignIn: true});
       });
+  }
 
+  closeModal() {
+    this.setState({modalOpen: false});
+  }
+
+  selectInitImage(image) {
+    this.setState({chosenImage: image, isNewUser: false}, () => {
+      console.log(this.state.chosenImage)
+    })
   }
 
   render() {
@@ -61,7 +80,15 @@ class App extends React.Component {
 
     if (!attemptedSignIn) return <div className="App"><NotSignedIn message="Please sign in with the Google popup."/></div>; // User hasn't attempted to sign in
     else if (!signedIn) return <div className="App"><NotSignedIn message="Couldn't sign you in. Check the console for more info."/></div>; // User couldn't sign in
-    else { // Successfully signed user in
+    else { // Successfully signed user in 
+      if (this.state.isNewUser) {
+        return (
+          <div className="App">
+            <ImagePicker open={this.state.modalOpen} closeModalCallback={() => this.closeModal()} chooseImage={(image) => this.selectInitImage(image)} />
+          </div>
+        )
+      }
+
       return (
         <div className="App">
           <MainView />

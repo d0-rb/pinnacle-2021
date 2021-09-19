@@ -30,6 +30,8 @@ const SideColumn = styled.div`
 `
 
 export default function MainView(props) {
+
+
     return (
         <Wrapper>
             <PostViewer />
