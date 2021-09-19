@@ -62,6 +62,12 @@ class EngineAPI(FlaskView):
         self.db.collection('images').document(data['img_uuid']).delete()
 
         del self.img_dataset[data['img_uuid']]
+        for existing_img_uuid, existing_img_data in self.img_dataset.items():
+            for pair_idx, (paired_img_uuid, paired_img_distance) in enumerate(existing_img_data['distances']):
+                if paired_img_uuid == data['img_uuid']:
+                    del existing_img_data[pair_idx]
+                    break
+
         self.save_data()
 
     @route('/upload_image', methods=['POST'])
@@ -173,6 +179,7 @@ class EngineAPI(FlaskView):
 
         text = clip.tokenize([data['text']]).cpu()
         features = self.model.encode_text(text).squeeze().detach().tolist()
+
         return self.predict_new(features, seen, limit)
 
 
@@ -184,9 +191,35 @@ class EngineAPI(FlaskView):
         img_uuid = entry['img_uuid']
         user = self.db.collection('users').document(uuid).get().to_dict()
         user['images_seen'][img_uuid] = True
+
         return json.dumps({
             'success': True,
         })
+
+
+    @route('/mark_valuable_image', methods=['POST'])
+    @cross_origin()
+    def mark_valuable_image(self):
+        data = request.json
+        user = self.db.collection('users').document(data['uuid']).get().to_dict()
+        user['most_valuable_img'] = user['img_uuid']
+
+        return json.dumps({
+            'success': True,
+        })
+
+
+    @route('/get_valuable_image', methods=['GET'])
+    @cross_origin()
+    def get_valuable_image(self):
+        data = request.json
+        user = self.db.collection('users').document(data['uuid']).get().to_dict()
+
+        return json.dumps({
+            'success': True,
+            'result': user['most_valuable_img'] if 'most_valuable_img' in user else None
+        })
+
 
     @route('/get_user_images', methods=['POST'])
     @cross_origin()
@@ -199,7 +232,9 @@ class EngineAPI(FlaskView):
             image = doc.to_dict()
             image['img_uuid'] = doc.id
             images.append(doc)
+
         return images
+
 
     def predict_new(self, embedding, seen=(), limit=0):
         img_distances = {}
