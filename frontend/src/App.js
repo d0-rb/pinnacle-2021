@@ -44,13 +44,12 @@ class App extends React.Component {
             })
           }
         })
-
       }).catch((error) => {
         // Handle Errors here.
         const errorCode = error.code;
         const errorMessage = error.message;
         
-        console.error(errorCode, "Couldn't sign user in: ", errorMessage);
+        console.error(errorCode, "Couldn't sign user in: ", errorMessage, error);
         this.setState({signedIn: false, attemptedSignIn: true});
       });
 
